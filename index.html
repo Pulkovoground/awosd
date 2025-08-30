@@ -2524,7 +2524,7 @@ function initializeCompass(id) {
   const rad = s / 2;
   const cx = s / 2, cy = s / 2;
 
-  // ИСПРАВЛЕННОЕ: Создаем риски с точными координатами
+  // ИСПРАВЛЕННОЕ: Создаем риски с точными координатами относительно окружности
   for (let i = 0; i < 36; i++) {
     const a = i * 10;
     const radian = (a - 90) * Math.PI / 180; // -90° для корректного поворота (0° = север)
@@ -2533,18 +2533,22 @@ function initializeCompass(id) {
     m.className = maj ? 'compass-mark major' : 'compass-mark minor';
     const ml = maj ? 18 : 12, mw = maj ? 2 : 1;
     
-    // Точное позиционирование рисок от края к центру
-    const outerRadius = rad - 1;
-    const innerRadius = outerRadius - ml;
+    // ИСПРАВЛЕНО: риски точно на окружности, а не смещенные
+    const compassCircleRadius = rad - 2; // Радиус самой окружности компаса
     
-    const outerX = cx + Math.cos(radian) * outerRadius;
-    const outerY = cy + Math.sin(radian) * outerRadius;
-    const innerX = cx + Math.cos(radian) * innerRadius;
-    const innerY = cy + Math.sin(radian) * innerRadius;
+    // Внешний конец риски - на окружности
+    const outerX = cx + Math.cos(radian) * compassCircleRadius;
+    const outerY = cy + Math.sin(radian) * compassCircleRadius;
     
+    // Внутренний конец риски - внутрь компаса
+    const innerX = cx + Math.cos(radian) * (compassCircleRadius - ml);
+    const innerY = cy + Math.sin(radian) * (compassCircleRadius - ml);
+    
+    // Центр риски между внешним и внутренним концом
     const centerMarkX = (outerX + innerX) / 2;
     const centerMarkY = (outerY + innerY) / 2;
     
+    // Позиционируем риску строго по центру между концами
     m.style.left = (centerMarkX - mw / 2) + 'px';
     m.style.top = (centerMarkY - ml / 2) + 'px';
     m.style.width = mw + 'px';
@@ -2553,7 +2557,7 @@ function initializeCompass(id) {
     m.style.transformOrigin = 'center';
     c.appendChild(m);
 
-    // Цифры на компасе - ИСПРАВЛЕННОЕ позиционирование
+    // Цифры на компасе - СНАРУЖИ от окружности
     if (a % 30 === 0) {
       const n = document.createElement('div');
       n.className = 'compass-number';
@@ -2572,8 +2576,8 @@ function initializeCompass(id) {
       else if (a === 330) d = '33';
       n.textContent = d;
       
-      // Цифры располагаются снаружи рисок
-      const numberRadius = rad + 15;
+      // Цифры располагаются снаружи от окружности + отступ
+      const numberRadius = compassCircleRadius + 18;
       const nx = cx + Math.cos(radian) * numberRadius;
       const ny = cy + Math.sin(radian) * numberRadius;
       n.style.left = (nx - 12) + 'px';
@@ -2690,7 +2694,7 @@ function initializeCompass(id) {
     c.appendChild(ws);
   }
 
-  // ИСПРАВЛЕННАЯ стрелка ветра с точными координатами
+  // ИСПРАВЛЕННАЯ стрелка ветра с координатами точно как у рисок
   if (currentMetarData && !currentMetarData.wind.calm) {
     const wa = document.createElement('div');
     wa.className = 'wind-arrow';
@@ -2698,7 +2702,8 @@ function initializeCompass(id) {
     
     // Используем те же координаты что и для рисок
     const windRad = (windAngle - 90) * Math.PI / 180; // -90° для корректного поворота
-    const arrowStartRadius = rad - 15; // Стрелка начинается чуть внутри от края
+    const compassCircleRadius = rad - 2; // Тот же радиус что у рисок
+    const arrowStartRadius = compassCircleRadius - 15; // Стрелка начинается внутри от окружности
     
     const startX = cx + Math.cos(windRad) * arrowStartRadius;
     const startY = cy + Math.sin(windRad) * arrowStartRadius;
@@ -2708,7 +2713,7 @@ function initializeCompass(id) {
     wa.style.transform = `rotate(${windAngle}deg)`;
     c.appendChild(wa);
     
-    console.log(`Wind arrow positioned at: (${Math.round(startX)}, ${Math.round(startY)}), angle: ${windAngle}°`);
+    console.log(`Wind arrow positioned at: (${Math.round(startX)}, ${Math.round(startY)}), angle: ${windAngle}°, radius: ${arrowStartRadius}`);
   }
 }
 
